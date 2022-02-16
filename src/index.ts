@@ -1,44 +1,104 @@
 import * as fs from 'fs';
 import {
-  AlignmentType,
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
+  File,
+  HeadingLevel,
+  ISectionOptions,
+  Packer, Paragraph,
+  StyleLevel, Table,
+  TableCell, TableOfContents,
+  TableRow, WidthType,
 } from 'docx';
 
-console.log('CRIANDO DOCUMENTO');
+const page1 = {
+  children: [
+    new TableOfContents('Summary', {
+      hyperlink: true,
+      headingStyleRange: '1-5',
+      stylesWithLevels: [new StyleLevel('MySpectacularStyle', 1)],
+    }),
+  ],
+} as ISectionOptions;
 
-const doc = new Document({
-  sections: [{
-    children: [
-      new Paragraph({
-        alignment: AlignmentType.CENTER,
-        children: [
-          new TextRun({
-            text: 'Hello World',
-            size: 24,
-            bold: true,
-          }),
-        ],
-      }),
-      new Paragraph({
-        alignment: AlignmentType.JUSTIFIED,
-        indent: {
-          firstLine: '1.5cm',
-        },
-        children: [
-          new TextRun({
-            text: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-          }),
-        ],
-      }),
-    ],
-  }],
+const page2 = {
+  children: [
+    new Paragraph({
+      text: 'Introdução',
+      heading: HeadingLevel.HEADING_1,
+      numbering: {
+        level: 0,
+        reference: '%2.',
+      },
+    }),
+    new Paragraph("I'm a other text very nicely written.'"),
+  ],
+} as ISectionOptions;
+
+const table = new Table({
+  columnWidths: [3505, 5505],
+  rows: [
+    new TableRow({
+      children: [
+        new TableCell({
+          width: {
+            size: 3505,
+            type: WidthType.DXA,
+          },
+          children: [new Paragraph('Hello')],
+        }),
+        new TableCell({
+          width: {
+            size: 5505,
+            type: WidthType.DXA,
+          },
+          children: [],
+        }),
+      ],
+    }),
+    new TableRow({
+      children: [
+        new TableCell({
+          width: {
+            size: 3505,
+            type: WidthType.DXA,
+          },
+          children: [],
+        }),
+        new TableCell({
+          width: {
+            size: 5505,
+            type: WidthType.DXA,
+          },
+          children: [new Paragraph('World')],
+        }),
+      ],
+    }),
+  ],
+});
+
+const page3 = {
+  children: [
+    new Paragraph({
+      text: 'Desenvolvimento',
+      heading: HeadingLevel.HEADING_1,
+    }),
+    table,
+  ],
+} as ISectionOptions;
+
+const doc = new File({
+  features: {
+    updateFields: true,
+  },
+  sections: [
+    page1,
+    page2,
+    page3,
+  ],
 });
 
 Packer.toBuffer(doc).then((buffer) => {
-  fs.writeFileSync('./src/docs/Document.docx', buffer);
+  const now = new Date().getTime();
+  fs.writeFileSync(`./src/docs/${now}.docx`, buffer);
 });
 
 console.log('DOCUMENTO CRIADO');
